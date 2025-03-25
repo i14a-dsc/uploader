@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Files - Uploader</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .upload-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 1rem;
+            padding: 3rem;
+            text-align: center;
+            transition: border-color var(--transition-speed);
+            margin-bottom: 2rem;
+        }
+
+        .drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background-color: rgba(33, 150, 243, 0.1);
+        }
+
+        .drop-zone-text {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        .uploaded-files {
+            margin-top: 2rem;
+        }
+
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="upload-container">
+            <div class="header">
+                <a href="/">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Home
+                </a>
+                <h1>Upload Files</h1>
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <p class="drop-zone-text">Drag and drop files here or use the buttons below</p>
+                <div class="upload-buttons">
+                    <input type="file" id="desktopFileInput" class="upload-input" multiple>
+                    <label for="desktopFileInput" class="btn">
+                        <span class="material-icons">upload_file</span>
+                        Choose Files
+                    </label>
+                    <input type="file" id="mobileFileInput" class="upload-input" multiple accept="image/*">
+                    <label for="mobileFileInput" class="btn btn-secondary">
+                        <span class="material-icons">photo_library</span>
+                        Select Images
+                    </label>
+                </div>
+            </div>
+
+            <div id="uploadProgress" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span id="progressText">Uploading...</span>
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="uploaded-files">
+                <h2>Uploaded Files</h2>
+                <div class="file-list" id="uploadedFiles"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const desktopFileInput = document.getElementById('desktopFileInput');
+        const mobileFileInput = document.getElementById('mobileFileInput');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressText = document.getElementById('progressText');
+        const progressPercentage = document.getElementById('progressPercentage');
+        const uploadedFiles = document.getElementById('uploadedFiles');
+
+        // Drag and drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        desktopFileInput.addEventListener('change', handleFiles, false);
+        mobileFileInput.addEventListener('change', handleFiles, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dropZone.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({ target: { files } });
+        }
+
+        async function handleFiles(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            uploadProgress.style.display = 'block';
+            progressText.textContent = 'Uploading...';
+            progressBarFill.style.width = '0%';
+
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/upload', true);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBarFill.style.width = percentComplete + '%';
+                        progressPercentage.textContent = Math.round(percentComplete) + '%';
+                    }
+                };
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        displayUploadedFiles(response.files);
+                        progressText.textContent = 'Upload Complete!';
+                        setTimeout(() => {
+                            uploadProgress.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        progressText.textContent = 'Upload Failed';
+                        progressBarFill.style.backgroundColor = 'var(--error-color)';
+                    }
+                };
+
+                xhr.onerror = function() {
+                    progressText.textContent = 'Upload Failed';
+                    progressBarFill.style.backgroundColor = 'var(--error-color)';
+                };
+
+                xhr.send(formData);
+            } catch (error) {
+                console.error('Error uploading files:', error);
+                progressText.textContent = 'Upload Failed';
+                progressBarFill.style.backgroundColor = 'var(--error-color)';
+            }
+        }
+
+        function displayUploadedFiles(files) {
+            const fileElements = files.map(file => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <span class="material-icons">description</span>
+                        <span>${file.originalName}</span>
+                    </div>
+                    <div class="file-actions">
+                        <a href="${file.url}" class="btn btn-secondary" title="Download" download>
+                            <span class="material-icons">download</span>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+
+            uploadedFiles.innerHTML = fileElements + uploadedFiles.innerHTML;
+        }
+    </script>
+</body>
+</html> 

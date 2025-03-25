@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploader</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .welcome-section {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 4rem;
+        }
+
+        .recent-files-section {
+            margin-top: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="welcome-section">
+            <h1 class="welcome-title">Welcome to Uploader</h1>
+            <p class="welcome-subtitle">Simple and fast file sharing for your local network</p>
+            <div class="action-buttons">
+                <a href="/upload" class="btn">
+                    <span class="material-icons">upload_file</span>
+                    Upload Files
+                </a>
+                <a href="/files" class="btn btn-secondary">
+                    <span class="material-icons">folder</span>
+                    Browse Files
+                </a>
+            </div>
+        </section>
+
+        <section class="recent-files-section">
+            <div class="section-header">
+                <h2>Recent Uploads</h2>
+                <a href="/files" class="btn btn-secondary">View All Files</a>
+            </div>
+            <div class="file-list" id="recentFiles">
+                <!-- Files will be populated here -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        async function loadRecentFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const data = await response.json();
+                const recentFiles = data.files.slice(0, 5);
+                const fileList = document.getElementById('recentFiles');
+
+                if (recentFiles.length === 0) {
+                    fileList.innerHTML = `
+                        <div class="empty-state">
+                            <span class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">upload_file</span>
+                            <p>No files uploaded yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                fileList.innerHTML = recentFiles.map(file => `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <span class="material-icons">description</span>
+                            <span>${file.fileName}</span>
+                        </div>
+                        <div class="file-actions">
+                            <a href="${file.url}" class="btn btn-secondary" title="Download" download>
+                                <span class="material-icons">download</span>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading recent files:', error);
+            }
+        }
+
+        // Load recent files when the page loads
+        loadRecentFiles();
+    </script>
+</body>
+</html> 
