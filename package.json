@@ -5,8 +5,9 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "bun build ./src/server.ts --outdir ./dist",
-    "start": "bun run dist/server.js",
+    "build": "bun build --target node ./src/server.ts --outdir ./dist",
+    "start": "bun run src/server.ts",
+    "start:node": "node dist/server.js",
     "dev": "bun --watch src/server.ts"
   },
   "dependencies": {
