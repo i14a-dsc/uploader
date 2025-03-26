@@ -12,22 +12,21 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 8081;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
-// File upload middleware
-app.use(fileUpload({
-  createParentPath: true,
-  limits: { fileSize: 1024 * 1024 * 1024 * 10 }, // 10GB limit
-  useTempFiles: true,
-  tempFileDir: '/tmp/',
-  preserveExtension: true,
-  uriDecodeFileNames: true
-}));
+app.use(
+  fileUpload({
+    createParentPath: true,
+    limits: { fileSize: 1024 * 1024 * 1024 * 10 },
+    useTempFiles: true,
+    tempFileDir: '/tmp/',
+    preserveExtension: true,
+    uriDecodeFileNames: true,
+  })
+);
 
-// Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
@@ -36,7 +35,6 @@ app.get('/upload', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/upload.html'));
 });
 
-// Helper function to generate unique filename
 function generateUniqueFilename(originalName: string, filesDir: string): string {
   const decodedName = Buffer.from(originalName, 'latin1').toString('utf8');
   const ext = path.extname(decodedName);
@@ -52,7 +50,6 @@ function generateUniqueFilename(originalName: string, filesDir: string): string 
   return fileName;
 }
 
-// API endpoints
 app.post('/api/upload', (req, res) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).json({ error: 'No files were uploaded.' });
@@ -72,7 +69,7 @@ app.post('/api/upload', (req, res) => {
         originalName: fileName,
         fileName: fileName,
         size: file.size,
-        url: `/files/${fileName}`
+        url: `/files/${fileName}`,
       });
     } catch (err) {
       console.error(err);
@@ -85,9 +82,10 @@ app.post('/api/upload', (req, res) => {
 
 app.get('/api/files', (req, res) => {
   const filesDir = path.join(__dirname, '../files');
-  
+
   try {
-    const files = fs.readdirSync(filesDir)
+    const files = fs
+      .readdirSync(filesDir)
       .filter(file => !file.startsWith('.'))
       .map(fileName => {
         const filePath = path.join(filesDir, fileName);
@@ -97,7 +95,7 @@ app.get('/api/files', (req, res) => {
           size: stats.size,
           url: `/files/${fileName}`,
           createdAt: stats.birthtime,
-          modifiedAt: stats.mtime
+          modifiedAt: stats.mtime,
         };
       })
       .sort((a, b) => b.modifiedAt.getTime() - a.modifiedAt.getTime());
@@ -129,7 +127,7 @@ app.delete('/api/files/:fileName', (req, res) => {
 app.put('/api/files/:fileName/rename', (req, res) => {
   const oldFileName = req.params.fileName;
   const { newName } = req.body;
-  
+
   if (!newName) {
     return res.status(400).json({ error: 'New name is required.' });
   }
@@ -142,10 +140,10 @@ app.put('/api/files/:fileName/rename', (req, res) => {
   try {
     if (fs.existsSync(oldPath)) {
       fs.renameSync(oldPath, newPath);
-      res.json({ 
+      res.json({
         message: 'File renamed successfully.',
         newFileName: uniqueNewName,
-        url: `/files/${uniqueNewName}`
+        url: `/files/${uniqueNewName}`,
       });
     } else {
       res.status(404).json({ error: 'File not found.' });
@@ -156,14 +154,12 @@ app.put('/api/files/:fileName/rename', (req, res) => {
   }
 });
 
-// File listing page route
 app.get('/files', (req, res) => {
   res.send(fs.readFileSync(path.join(__dirname, '../public/files.html'), 'utf8'));
 });
 
-// Static file serving for uploaded files
 app.use('/files', express.static(path.join(__dirname, '../files')));
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
-}); 
+});

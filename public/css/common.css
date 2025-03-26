@@ -15,10 +15,10 @@
 }
 
 body {
-     background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
-    text-decoration: none!important;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  text-decoration: none !important;
 }
 
 a {
@@ -172,4 +172,4 @@ a {
     transform: translateX(0);
     opacity: 1;
   }
-} 
+}
