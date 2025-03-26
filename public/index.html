@@ -52,6 +52,36 @@
         margin-bottom: 1.5rem;
       }
 
+      .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        background: var(--bg-secondary);
+      }
+
+      .file-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+      }
+
+      .file-info > span:not(.material-icons) {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
       .empty-state {
         text-align: center;
         padding: 3rem;
@@ -139,34 +169,48 @@
 
           if (recentFiles.length === 0) {
             fileList.innerHTML = `
-                        <div class="empty-state">
-                            <span class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">upload_file</span>
-                            <p>No files uploaded yet</p>
-                        </div>
-                    `;
+              <div class="empty-state">
+                <span class="material-icons" style="font-size: 3rem; margin-bottom: 1rem;">upload_file</span>
+                <p>No files uploaded yet</p>
+              </div>
+            `;
             return;
           }
 
           fileList.innerHTML = recentFiles
             .map(
               file => `
-                    <div class="file-item">
-                        <div class="file-info">
-                            <span class="material-icons">description</span>
-                            <span>${file.fileName}</span>
-                        </div>
-                        <div class="file-actions">
-                            <a href="${file.url}" class="btn btn-secondary" title="Download" download>
-                                <span class="material-icons">download</span>
-                            </a>
-                        </div>
+                <div class="file-item">
+                  <div class="file-info">
+                    <span class="material-icons">description</span>
+                    <div>
+                      <span>${file.fileName}</span>
+                      <div style="color: var(--text-secondary); font-size: 0.875rem;">${formatFileSize(file.size)}</div>
                     </div>
-                `
+                  </div>
+                  <div class="file-actions">
+                    <a href="${file.url}" class="btn btn-secondary" target="_blank" title="Preview">
+                      <span class="material-icons">visibility</span>
+                    </a>
+                    <a href="${file.url}" class="btn btn-secondary" download title="Download">
+                      <span class="material-icons">download</span>
+                    </a>
+                  </div>
+                </div>
+              `
             )
             .join('');
         } catch (error) {
           console.error('Error loading recent files:', error);
         }
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       }
 
       function showToast(message, isError = false) {
@@ -188,8 +232,16 @@
         mobileMenu.classList.toggle('active');
       }
 
+      let popupOverlay = document.getElementById('popupOverlay');
+      if (!popupOverlay) {
+        popupOverlay = document.createElement('div');
+        popupOverlay.id = 'popupOverlay';
+        popupOverlay.className = 'popup-overlay';
+        popupOverlay.style.display = 'none';
+        document.body.appendChild(popupOverlay);
+      }
+
       popupOverlay.addEventListener('click', () => {
-        closeSharePopup();
         const mobileMenu = document.getElementById('mobileMenu');
         mobileMenu.classList.remove('active');
       });
