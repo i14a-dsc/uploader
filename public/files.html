@@ -9,7 +9,6 @@
       .files-container {
         max-width: 1000px;
         margin: 0 auto;
-        padding: 0 1rem;
       }
 
       .header {
@@ -17,6 +16,8 @@
         align-items: center;
         gap: 1rem;
         margin-bottom: 2rem;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .header a {
@@ -25,6 +26,37 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+      }
+
+      .header h1 {
+        margin: 0;
+        flex: 1;
+      }
+
+      .nav {
+        margin-left: auto;
+        display: flex;
+        gap: 1rem;
+      }
+
+      .nav a {
+        text-decoration: none;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      }
+
+      .nav a:hover {
+        background-color: var(--bg-hover);
+      }
+
+      .nav a.active {
+        color: var(--accent-color);
+        background-color: var(--bg-hover);
       }
 
       .file-size {
@@ -121,9 +153,12 @@
 
       @media (max-width: 768px) {
         .files-container {
-          padding: 0 0.75rem;
           width: 100%;
           box-sizing: border-box;
+        }
+
+        .header {
+          padding: 0;
         }
 
         .file-item {
@@ -137,7 +172,10 @@
         }
 
         .file-info .file-name {
-          max-width: none;
+          max-width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .file-actions {
@@ -160,6 +198,10 @@
 
         .file-actions .material-icons {
           font-size: 1.25rem;
+        }
+
+        .nav {
+          display: none;
         }
       }
 
@@ -184,11 +226,47 @@
     <div class="container">
       <div class="files-container">
         <div class="header">
-          <a href="/">
-            <span class="material-icons">arrow_back</span>
-            Back to Home
-          </a>
           <h1>Files</h1>
+          <nav class="nav">
+            <a href="/" class="nav-item">
+              <span class="material-icons">home</span>
+              <span>Home</span>
+            </a>
+            <a href="/upload" class="nav-item">
+              <span class="material-icons">upload</span>
+              <span>Upload</span>
+            </a>
+            <a href="/files" class="nav-item active">
+              <span class="material-icons">folder</span>
+              <span>Files</span>
+            </a>
+          </nav>
+          <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <span class="material-icons">menu</span>
+          </button>
+        </div>
+
+        <div class="mobile-menu" id="mobileMenu">
+          <div class="mobile-menu-header">
+            <h2>Menu</h2>
+            <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <nav class="mobile-menu-nav">
+            <a href="/" class="nav-item">
+              <span class="material-icons">home</span>
+              <span>Home</span>
+            </a>
+            <a href="/upload" class="nav-item">
+              <span class="material-icons">upload</span>
+              <span>Upload</span>
+            </a>
+            <a href="/files" class="nav-item active">
+              <span class="material-icons">folder</span>
+              <span>Files</span>
+            </a>
+          </nav>
         </div>
 
         <div class="file-list" id="fileList"></div>
@@ -250,7 +328,7 @@
                         <div class="file-info">
                             <span class="material-icons">description</span>
                             <div>
-                                <span>${file.fileName}</span>
+                                <span class="file-name">${file.fileName}</span>
                                 <div class="file-size">${formatFileSize(file.size)}</div>
                             </div>
                         </div>
@@ -258,6 +336,10 @@
                             <a href="${file.url}" class="btn btn-download" download title="Download">
                                 <span class="material-icons">download</span>
                                 <span>Download</span>
+                            </a>
+                            <a href="${file.url}" class="btn btn-secondary" target="_blank" title="Preview">
+                                <span class="material-icons">visibility</span>
+                                <span>Preview</span>
                             </a>
                             <button class="btn btn-secondary" onclick="showSharePopup('${file.url}')" title="Share">
                                 <span class="material-icons">share</span>
@@ -385,9 +467,16 @@
         }, 3000);
       }
 
+      function toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.toggle('active');
+      }
+
       popupOverlay.addEventListener('click', () => {
         closeRenamePopup();
         closeSharePopup();
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.remove('active');
       });
 
       loadFiles();

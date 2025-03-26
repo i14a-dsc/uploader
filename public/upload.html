@@ -75,15 +75,51 @@
   </head>
   <body>
     <div class="container">
-      <div class="upload-container">
-        <div class="header">
-          <a href="/">
-            <span class="material-icons">arrow_back</span>
-            Back to Home
+      <div class="header">
+        <h1>Upload Files</h1>
+        <nav class="nav">
+          <a href="/" class="nav-item">
+            <span class="material-icons">home</span>
+            <span>Home</span>
           </a>
-          <h1>Upload Files</h1>
-        </div>
+          <a href="/upload" class="nav-item active">
+            <span class="material-icons">upload</span>
+            <span>Upload</span>
+          </a>
+          <a href="/files" class="nav-item">
+            <span class="material-icons">folder</span>
+            <span>Files</span>
+          </a>
+        </nav>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+          <span class="material-icons">menu</span>
+        </button>
+      </div>
 
+      <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+          <h2>Menu</h2>
+          <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <nav class="mobile-menu-nav">
+          <a href="/" class="nav-item">
+            <span class="material-icons">home</span>
+            <span>Home</span>
+          </a>
+          <a href="/upload" class="nav-item active">
+            <span class="material-icons">upload</span>
+            <span>Upload</span>
+          </a>
+          <a href="/files" class="nav-item">
+            <span class="material-icons">folder</span>
+            <span>Files</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="upload-container">
         <div class="drop-zone" id="dropZone">
           <p class="drop-zone-text">Drag and drop files here or use the buttons below</p>
           <div class="upload-buttons">
@@ -244,6 +280,33 @@
 
         uploadedFiles.innerHTML = fileElements + uploadedFiles.innerHTML;
       }
+
+      function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        if (isError) {
+          toast.style.backgroundColor = 'var(--error-color)';
+        }
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.remove();
+        }, 3000);
+      }
+
+      function toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.toggle('active');
+      }
+
+      popupOverlay.addEventListener('click', () => {
+        closeSharePopup();
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenu.classList.remove('active');
+      });
+
+      loadRecentFiles();
     </script>
   </body>
 </html>
