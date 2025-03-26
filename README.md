@@ -1,3 +1,5 @@
+[日本語版](./README-ja.md)
+
 # Uploader
 
 A simple and fast file sharing application for local networks
